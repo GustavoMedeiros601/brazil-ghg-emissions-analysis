@@ -165,14 +165,14 @@ Investigation of emission patterns over time.
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/SEU-USUARIO/brazil-emissions-analysis.git
-cd brazil-emissions-analysis
+git clone https://github.com/GustavoMedeiros601/brazil-ghg-emissions-analysis.git
+cd brazil-ghg-emissions-analysis
 ```
 
 ## 2. Install dependencies
 
 ```bash
-pip install pandas matplotlib openpyxl python-calamine
+python -m pip install -r requirements.txt
 ```
 
 ## 3. Run the notebooks
@@ -204,3 +204,16 @@ Potential future enhancements include:
 Software Engineering Student focused on Data Analytics, Business Intelligence and Artificial Intelligence.
 
 - LinkedIn: www.linkedin.com/in/gustavo-medeiros-m-da-silva-48a11a294
+
+
+## Reproduzir e validar
+
+Use Python 3.11 e um ambiente virtual. Depois da instalação das dependências:
+
+```bash
+python -m ipykernel install --sys-prefix --name python3
+python scripts/run_notebooks.py
+python -m unittest discover -s tests -v
+```
+
+O notebook 01 gera todos os arquivos consumidos pelo 02, com caminhos relativos à raiz. `src/ghg.py` centraliza as regras. `alocacao_emissoes_2021.csv` separa emissões atribuídas às 27 UFs e emissões sem alocação estadual; ambas integram o total nacional. Os resultados retratam a coleção histórica SEEG 10, não o ano corrente.
