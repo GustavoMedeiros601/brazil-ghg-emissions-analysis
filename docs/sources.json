@@ -1,0 +1,26 @@
+{
+  "1-SEEG10_GERAL-BR_UF_2022.10.27-FINAL-SITE.xlsx": {
+    "url": "https://github.com/GustavoMedeiros601/brazil-ghg-emissions-analysis/blob/1aca3db4b4b789327998505c565e255180e0642f/data/raw/1-SEEG10_GERAL-BR_UF_2022.10.27-FINAL-SITE.xlsx",
+    "original_publisher": "SEEG / Observatório do Clima",
+    "role": "Fonte histórica do repositório, coleção 10",
+    "path": "data/raw/1-SEEG10_GERAL-BR_UF_2022.10.27-FINAL-SITE.xlsx",
+    "sha256": "51986bd3ebf7b282df6978b1791eca3479c3dd4966b2dac12a552aa64132b187",
+    "accessed": "2026-11-23"
+  },
+  "estimativa_dou_2021.xls": {
+    "url": "https://ftp.ibge.gov.br/Estimativas_de_Populacao/Estimativas_2021/estimativa_dou_2021.xls",
+    "original_publisher": "IBGE",
+    "role": "Denominador principal, julho/2021",
+    "path": "data/raw/estimativa_dou_2021.xls",
+    "sha256": "6800abbd5b97fa8fb978bfaa5afa34f800b70ef0c9ac01ea3c3b95325d771736",
+    "accessed": "2026-11-23"
+  },
+  "POP2022_Municipios.xls": {
+    "url": "https://github.com/GustavoMedeiros601/brazil-ghg-emissions-analysis/blob/1aca3db4b4b789327998505c565e255180e0642f/data/raw/POP2022_Municipios.xls",
+    "original_publisher": "IBGE",
+    "role": "Denominador legado; sensibilidade apenas",
+    "path": "data/raw/POP2022_Municipios.xls",
+    "sha256": "f4234936626e340089849e17d75c0a80b13ffd0863522a65cdf7c62f91a449f1",
+    "accessed": "2026-11-23"
+  }
+}

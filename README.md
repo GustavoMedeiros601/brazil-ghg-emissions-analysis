@@ -1,239 +1,142 @@
-# Brazil Emissions Analysis
+# Brazil Greenhouse Gas Emissions Analysis
 
-Exploratory data analysis of greenhouse gas (GHG) emissions in Brazil using public datasets from SEEG and IBGE.
+Análise reproduzível das emissões brasileiras de gases de efeito estufa, com dados históricos do **SEEG 10 (1970–2021)** e população do **IBGE de julho de 2021**. O projeto conecta preparação, validação, visualização e interpretação dos resultados.
 
-The project builds a complete analytical workflow, from raw data preparation to exploratory analysis, generating structured datasets and visual insights about emissions across Brazilian states, economic sectors and historical trends.
+## Principais resultados
 
----
+- **2021:** 2.423 GtCO₂e brutas e 1.756 GtCO₂e líquidas, após incorporar -666.9 MtCO₂e de remoções assinadas. Ambos usam GWP-AR5 e excluem NCI e bunkers.
+- **2002→2003:** Uso da Terra e Floresta contribuiu com +505.5 MtCO₂e para a mudança nacional. **2008→2009:** o mesmo setor contribuiu com -314.6 MtCO₂e. São contribuições contábeis, sem atribuição causal.
+- **Perfis estaduais:** Uso da Terra e Floresta responde por 85.1% do bruto do Pará; Energia, por 53.4% do bruto de São Paulo. Rankings semelhantes podem esconder composições diferentes.
+- **Per capita:** ao substituir a base populacional legada de 2022 pela estimativa de 2021, seis UFs mudam de posição. O numerador de emissões permanece idêntico; isso não representa queda das emissões.
+- **Cobertura:** 85.6 MtCO₂e (3.53%) do bruto nacional não estão alocadas a estados. Essa parcela entra no total nacional, mas não nos rankings de UFs.
 
-# Problem Context
+Os resultados retratam a edição histórica utilizada, **não as emissões atuais do Brasil**. Gt = bilhões de toneladas; Mt = milhões de toneladas.
 
-Understanding greenhouse gas emissions is essential for evaluating environmental impacts, supporting public policy discussions and monitoring climate-related indicators.
+## Perguntas respondidas
 
-Although Brazil provides extensive public datasets through SEEG and IBGE, these sources require cleaning, transformation and integration before meaningful analysis can be performed.
+1. Quais estados lideram em emissões brutas e por habitante?
+2. Quais setores compõem as emissões de cada estado?
+3. Que contribuições setoriais explicam aritmeticamente a alta de 2003 e a queda de 2009?
+4. Como a população usada no denominador afeta o ranking?
+5. Qual a diferença entre emissões brutas e saldo líquido?
 
-This project addresses that challenge by creating a reproducible data pipeline that transforms raw datasets into analytical outputs ready for exploration and visualization.
+## Visualizações e interpretação
 
----
+### Evolução histórica e comparabilidade
 
-# Objectives
+![Série histórica de emissões brutas](images/serie_bruta_1970_2021.png)
 
-- Analyze greenhouse gas emissions across Brazilian states
-- Calculate emissions per capita using population estimates
-- Compare emissions between economic sectors
-- Explore historical emission trends in Brazil
-- Demonstrate practical applications of data preparation and exploratory analysis techniques
+Mudança de Uso da Terra e Floresta só possui cobertura desde 1990. A linha anterior é exibida separadamente como cobertura parcial; não se interpreta o salto 1989→1990 como crescimento real. Taxas nacionais de mesma cobertura começam em 1991.
 
----
+### O que compõe as mudanças de 2003 e 2009?
 
-# Data Sources
+![Decomposição de 2002 para 2003](images/decomposicao_2002_2003.png)
 
-## SEEG
+![Decomposição de 2008 para 2009](images/decomposicao_2008_2009.png)
 
-Sistema de Estimativas de Emissões e Remoções de Gases de Efeito Estufa.
+Cada gráfico reconcilia o total inicial, os deltas dos cinco setores e o total final. Contribuições positivas e negativas podem se compensar; a tabela também traz contribuições em pontos percentuais da taxa nacional. Esses cálculos não isolam causas, efeitos de políticas ou mecanismos econômicos.
 
-Data used:
+### Composição dos estados
 
-- State-level emissions
-- Sector-level emissions
-- Historical emissions series
+![Composição estadual por setor](images/composicao_uf_setor_2021.png)
 
-## IBGE
+As barras mostram percentuais; os rótulos das UFs preservam os totais absolutos. A tabela exportada cobre 27 UFs × 5 setores. Processos Industriais em AC, AP e RR não possuem registros: esses valores ficam ausentes, com indicador de cobertura, sem presumir emissão zero. Os dez estados do gráfico têm registros nos cinco setores. [Detalhes](docs/sector-analysis.md).
 
-Instituto Brasileiro de Geografia e Estatística.
+### Sensibilidade do indicador per capita
 
-Data used:
+![Comparação dos denominadores populacionais](images/sensibilidade_per_capita.png)
 
-- Municipal population estimates (July 2021); legacy 2022 base retained for sensitivity analysis
+O indicador principal usa população de julho de 2021. A versão legada de 2022 é um cenário de sensibilidade, e não um segundo ano de emissões. Diferenças entre denominadores incluem mudanças de levantamento/metodologia, além da referência temporal. Per capita é uma razão territorial, não a pegada de consumo dos habitantes. [Fonte e integração](docs/population.md).
 
----
+### Brutas e líquidas
 
-# Technologies
+![Ponte entre emissões brutas e líquidas](images/brutas_liquidas_2021.png)
 
-- Python
-- Pandas
-- Matplotlib
-- Jupyter Notebook
-- Pathlib
+O arquivo original já registra remoções negativas: **líquidas = brutas + remoções assinadas**. Rankings, participações e séries anteriores usam o bruto. Não transferir suas conclusões automaticamente para o líquido. [Categorias, sinais e limites](docs/methodology.md).
 
----
+## Fontes e método
 
-# Project Structure
+- **SEEG / Observatório do Clima:** arquivo `1-SEEG10_GERAL-BR_UF_2022.10.27-FINAL-SITE.xlsx`, aba `GEE Estados`, métrica única `CO2e (t) GWP-AR5`.
+- **[Relatório SEEG 10](https://energiaeambiente.org.br/wp-content/uploads/2023/04/SEEG-10-anos-v5.pdf):** referência para cobertura, categorias e definição do balanço.
+- **[IBGE, estimativa DOU 2021](https://ftp.ibge.gov.br/Estimativas_de_Populacao/Estimativas_2021/estimativa_dou_2021.xls):** referência populacional em 1º de julho de 2021, publicação de agosto de 2021. Os totais municipais são reconciliados com a tabela oficial de UFs do mesmo arquivo.
+- **Base legada IBGE 2022:** preservada para comparação com a versão anterior do projeto.
 
-```text
-BRAZIL-EMISSIONS-ANALYSIS/
-│
-├── data/
-│   ├── raw/
-│   │   ├── 1-SEEG10_GERAL-BR_UF_2022.10.27-FINAL-SITE.xlsx
-│   │   └── POP2022_Municipios.xls
-│   │
-│   └── processed/
-│       ├── emissao_anual_brasil.csv
-│       ├── emissao_estado_2021.csv
-│       ├── emissao_per_capita_2021.csv
-│       ├── emissao_setor_2021.csv
-│       └── emissoes_co2e_gwp_ar5_1970_2021.csv
-│
-├── notebook/
-│   ├── 01_data_preparation_emissions.ipynb
-│   └── 02_exploratory_analysis.ipynb
-│
-└── README.md
-```
+Os arquivos brutos são preservados no repositório. [Manifesto de fontes e SHA-256](docs/sources.json), [metodologia completa](docs/methodology.md). O total nacional soma registros elegíveis com e sem UF; agregados `BR` nunca são somados automaticamente aos componentes.
 
----
+## Como reproduzir
 
-# Workflow
-
-```text
-Raw Data (SEEG + IBGE)
-           │
-           ▼
-Data Cleaning
-           │
-           ▼
-Data Transformation
-           │
-           ▼
-Population Integration
-           │
-           ▼
-Per Capita Calculations
-           │
-           ▼
-Processed Datasets
-           │
-           ▼
-Exploratory Analysis
-           │
-           ▼
-Visual Insights
-```
-
----
-
-# Generated Datasets
-
-| Dataset | Description |
-|----------|-------------|
-| emissao_estado_2021 | Total greenhouse gas emissions by state |
-| emissao_per_capita_2021 | Emissions per capita by state |
-| emissao_setor_2021 | Emissions grouped by economic sector |
-| emissao_anual_brasil | Historical national emissions series |
-| emissoes_co2e_gwp_ar5_1970_2021 | Historical emissions dataset used for trend analysis |
-
----
-
-# Analysis Performed
-
-The exploratory notebook investigates:
-
-## State Emissions
-
-Comparison of total emissions across Brazilian states.
-
-## Emissions Per Capita
-
-Analysis of emissions relative to population size.
-
-## Economic Sectors
-
-Evaluation of sector participation in total emissions.
-
-## Historical Trends
-
-Investigation of emission patterns over time.
-
----
-
-# Skills Demonstrated
-
-- Data Cleaning
-- Data Transformation
-- Data Integration
-- Exploratory Data Analysis (EDA)
-- Data Visualization
-- Analytical Thinking
-- Reproducible Data Workflows
-- Public Data Processing
-
----
-
-# How to Run
-
-## 1. Clone the repository
+Use **Python 3.11**. Execute na raiz do repositório:
 
 ```bash
 git clone https://github.com/GustavoMedeiros601/brazil-ghg-emissions-analysis.git
 cd brazil-ghg-emissions-analysis
+python -m venv .venv
 ```
 
-## 2. Install dependencies
+Ative o ambiente:
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+```bash
+# Linux/macOS
+source .venv/bin/activate
+```
+
+Instale as dependências e execute:
 
 ```bash
 python -m pip install -r requirements.txt
-```
-
-## 3. Run the notebooks
-
-Execute the notebooks in the following order:
-
-1. `01_data_preparation_emissions.ipynb`
-2. `02_exploratory_analysis.ipynb`
-
----
-
-# Future Improvements
-
-Potential future enhancements include:
-
-- Interactive Power BI dashboard
-- Geospatial analysis using Brazilian maps
-- Automated data update pipeline
-- Additional environmental indicators
-- Forecasting and predictive modeling
-- Public analytical dashboard
-
----
-
-# Author
-
-**Gustavo Medeiros**
-
-Software Engineering Student focused on Data Analytics, Business Intelligence and Artificial Intelligence.
-
-- LinkedIn: www.linkedin.com/in/gustavo-medeiros-m-da-silva-48a11a294
-
-
-## Reproduzir e validar
-
-Use Python 3.11 e um ambiente virtual. Depois da instalação das dependências:
-
-```bash
 python -m ipykernel install --sys-prefix --name python3
 python scripts/run_notebooks.py
 python -m unittest discover -s tests -v
 ```
 
-O notebook 01 gera todos os arquivos consumidos pelo 02, com caminhos relativos à raiz. `src/ghg.py` centraliza as regras. `alocacao_emissoes_2021.csv` separa emissões atribuídas às 27 UFs e emissões sem alocação estadual; ambas integram o total nacional. Os resultados retratam a coleção histórica SEEG 10, não o ano corrente.
+O executor abre kernels novos e salva as saídas nos notebooks. Também é possível executar interativamente, nesta ordem, da raiz ou da pasta `notebook/`:
 
+1. [Preparação e controles](notebook/01_data_preparation_emissions.ipynb).
+2. [Análise e visualizações](notebook/02_exploratory_analysis.ipynb).
 
-## Comparabilidade per capita
+Nenhuma cópia ou renomeação manual de CSV é necessária. A primeira execução lê a planilha bruta e pode levar alguns minutos. São necessárias dependências instaladas e espaço para os dados processados e figuras.
 
-O indicador principal usa a população oficial de julho de 2021. [Método e fonte](docs/population.md). A análise de sensibilidade mantém as emissões fixas e compara os dois denominadores:
+## Estrutura e saídas
 
-![Sensibilidade à população](images/sensibilidade_per_capita.png)
+```text
+data/raw/          Fontes fixadas, sem edição manual
+data/processed/    CSVs gerados pelo notebook 01
+notebook/          Preparação e análise, com saídas salvas
+src/ghg.py         Filtros, agregações, população e validações
+src/charts.py      Figuras de decomposição e composição
+scripts/           Executor dos notebooks
+tests/             Testes de integração e regras analíticas
+images/            Figuras reproduzíveis usadas neste README
+docs/              Metodologia, fontes e limitações
+```
 
+| Saída em `data/processed/` | Conteúdo |
+|---|---|
+| `emissoes_co2e_gwp_ar5_1970_2021.csv` | Registros brutos filtrados, em formato longo |
+| `emissao_anual_brasil.csv` | Série nacional com parcela sem alocação |
+| `emissao_estado_2021.csv` | Totais brutos das 27 UFs |
+| `emissao_setor_2021.csv` | Totais brutos nacionais por setor |
+| `emissao_per_capita_2021.csv` | Emissões de 2021 / população de 2021 |
+| `alocacao_emissoes_2021.csv` | Reconciliação territorial |
+| `sensibilidade_per_capita_2021.csv` | Dois denominadores e mudanças de posição |
+| `decomposicao_setorial_historica.csv` | Deltas setoriais e contribuições em p.p. |
+| `emissao_uf_setor_2021.csv` | Valores e participações por UF/setor, com cobertura |
+| `balanco_nacional_2021.csv`, `balanco_uf_2021.csv` | Brutas, remoções assinadas e líquidas |
+| `categorias_seeg_2021.csv` | Auditoria das categorias incluídas e excluídas |
 
-## Decomposição das mudanças e perfis estaduais
+## Critérios de qualidade
 
-A análise de 2002→2003 e 2008→2009 identifica contribuições setoriais que reconciliam os totais nacionais. Trata-se de uma decomposição contábil, não causal.
+Os testes verificam as 27 UFs, municípios únicos, população positiva, correspondência sem multiplicação de linhas, fontes fixadas por hash, estabilidade do numerador na sensibilidade, soma das participações, reconciliação das decomposições, rejeição de remoções com sinal invertido e exclusão de NCI/bunkers. Também comparam os CSVs exportados com as transformações na fonte.
 
-![Contribuições de 2002 a 2003](images/decomposicao_2002_2003.png)
+As verificações numéricas usam tolerâncias explícitas em vez de igualdade binária de ponto flutuante. Ausência de registro não é convertida silenciosamente em zero. Dados anteriores a 1990 têm cobertura diferente. As estimativas do SEEG são dados de inventário, não medições diretas de todas as emissões nem evidência causal.
 
-![Contribuições de 2008 a 2009](images/decomposicao_2008_2009.png)
+## Autor
 
-A composição percentual permite comparar os perfis dos dez maiores emissores, sem perder seus totais absolutos. A tabela exportada contém todas as 27 UFs.
+**Gustavo Medeiros** — estudante de Engenharia de Software com foco em Dados, BI e Inteligência Artificial.
 
-![Composição estadual](images/composicao_uf_setor_2021.png)
+[LinkedIn](https://www.linkedin.com/in/gustavo-medeiros-m-da-silva-48a11a294)

@@ -82,7 +82,8 @@ def write_csv(frame, path):
 
 def prepare(root):
     root = Path(root)
-    long = gross_long(read_seeg(root))
+    raw = read_seeg(root)
+    long = gross_long(raw)
     annual, states, sectors, allocation = aggregate_gross(long)
     pc = per_capita(states, population_2021(root))
     comparison = population_sensitivity(states, population_2021(root), population_2022(root))
@@ -91,6 +92,10 @@ def prepare(root):
                "emissao_per_capita_2021.csv":pc, "alocacao_emissoes_2021.csv":allocation, "sensibilidade_per_capita_2021.csv":comparison}
     outputs["emissao_uf_setor_2021.csv"] = state_sector(long)
     outputs["decomposicao_setorial_historica.csv"] = temporal_decomposition(long)
+    national, states_balance, categories = gross_net(raw)
+    outputs["balanco_nacional_2021.csv"] = national
+    outputs["balanco_uf_2021.csv"] = states_balance
+    outputs["categorias_seeg_2021.csv"] = categories
     for name, frame in outputs.items():
         write_csv(frame, root / "data/processed" / name)
     return outputs
@@ -177,3 +182,25 @@ def temporal_decomposition(long, periods=((2002,2003),(2008,2009))):
         np.testing.assert_allclose(part.Diferenca.sum(), totals.loc[end] - totals.loc[start],rtol=1e-12,atol=1e-6)
         rows.append(part)
     return pd.concat(rows,ignore_index=True)
+
+
+def gross_net(raw, year=YEAR):
+    metric = raw.loc[raw["Gás"].eq(METRIC)].copy()
+    require(year >= 1990 and year <= YEAR, "Balanço exige cobertura completa desde 1990")
+    included = metric.loc[metric[KIND].isin(["Emissão", "Remoção"])].copy()
+    require(not included.Estado.eq("BR").any(), "Agregado BR requer revisão para não duplicar componentes")
+    require(included[year].notna().all() and np.isfinite(included[year]).all(), "Valor ausente no balanço")
+    # A planilha já traz remoções negativas: não aplicar abs() nem subtrair novamente.
+    removals = included.loc[included[KIND].eq("Remoção"),year]
+    require((removals <= 0).all(), "Convenção de sinais das remoções mudou: revisar fonte")
+    included["Estado"] = included.Estado.fillna("Sem alocação estadual")
+    grouped = included.groupby(["Estado",KIND])[year].sum().unstack(KIND,fill_value=0)
+    grouped = grouped.rename(columns={"Emissão":"Brutas", "Remoção":"Remocoes_assinadas"})
+    grouped["Liquidas"] = grouped.Brutas + grouped.Remocoes_assinadas
+    grouped["Ano"] = year
+    national = grouped[["Brutas","Remocoes_assinadas","Liquidas"]].sum().to_frame().T
+    national["Ano"] = year
+    np.testing.assert_allclose(national.Liquidas, national.Brutas + national.Remocoes_assinadas,rtol=1e-12)
+    categories = metric.groupby(KIND,as_index=False).agg(Registros=(year,"size"),Valor_assinado=(year,"sum"))
+    categories["Incluida_no_balanco"] = categories[KIND].isin(["Emissão", "Remoção"])
+    return national, grouped.reset_index(), categories
