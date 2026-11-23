@@ -44,7 +44,7 @@ Instituto Brasileiro de Geografia e Estatística.
 
 Data used:
 
-- Municipal population estimates (2022)
+- Municipal population estimates (July 2021); legacy 2022 base retained for sensitivity analysis
 
 ---
 
@@ -217,3 +217,10 @@ python -m unittest discover -s tests -v
 ```
 
 O notebook 01 gera todos os arquivos consumidos pelo 02, com caminhos relativos à raiz. `src/ghg.py` centraliza as regras. `alocacao_emissoes_2021.csv` separa emissões atribuídas às 27 UFs e emissões sem alocação estadual; ambas integram o total nacional. Os resultados retratam a coleção histórica SEEG 10, não o ano corrente.
+
+
+## Comparabilidade per capita
+
+O indicador principal usa a população oficial de julho de 2021. [Método e fonte](docs/population.md). A análise de sensibilidade mantém as emissões fixas e compara os dois denominadores:
+
+![Sensibilidade à população](images/sensibilidade_per_capita.png)

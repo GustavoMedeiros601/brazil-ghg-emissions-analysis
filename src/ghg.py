@@ -84,10 +84,11 @@ def prepare(root):
     root = Path(root)
     long = gross_long(read_seeg(root))
     annual, states, sectors, allocation = aggregate_gross(long)
-    pc = per_capita(states, population_2022(root))
+    pc = per_capita(states, population_2021(root))
+    comparison = population_sensitivity(states, population_2021(root), population_2022(root))
     outputs = {"emissoes_co2e_gwp_ar5_1970_2021.csv":long, "emissao_anual_brasil.csv":annual,
                "emissao_estado_2021.csv":states, "emissao_setor_2021.csv":sectors,
-               "emissao_per_capita_2021.csv":pc, "alocacao_emissoes_2021.csv":allocation}
+               "emissao_per_capita_2021.csv":pc, "alocacao_emissoes_2021.csv":allocation, "sensibilidade_per_capita_2021.csv":comparison}
     for name, frame in outputs.items():
         write_csv(frame, root / "data/processed" / name)
     return outputs
@@ -112,3 +113,34 @@ def validate_processed(root):
     np.testing.assert_allclose(allocation.Emissao.sum(), national, rtol=1e-12)
     np.testing.assert_allclose(state.Emissao.sum(), allocation.loc[allocation.Alocacao.eq("Alocado às UFs"), "Emissao"].iloc[0], rtol=1e-12)
     return {"ufs": len(state), "anos": len(annual), "nacional_2021_tco2e": float(national), "alocado_ufs_tco2e": float(state.Emissao.sum())}
+
+
+def population_2021(root):
+    """Agrega estimativas municipais de julho/2021 e reconcilia com tabela de UFs."""
+    file = Path(root) / "data/raw/estimativa_dou_2021.xls"
+    municipalities = pd.read_excel(file, sheet_name="Municípios", header=1, engine="calamine")
+    municipalities = municipalities.loc[municipalities.UF.isin(UFS)].copy()
+    key = ["COD. UF", "COD. MUNIC"]
+    require(not municipalities.duplicated(key).any(), "Municípios duplicados na população")
+    municipalities["populacao"] = pd.to_numeric(municipalities["POPULAÇÃO ESTIMADA"].astype(str).str.replace(r"\(\d+\)", "", regex=True).str.replace(".", "", regex=False).str.strip(), errors="raise")
+    result = municipalities.groupby("UF", as_index=False).populacao.sum().rename(columns={"UF":"Estado"})
+    names = dict(zip("Rondônia|Acre|Amazonas|Roraima|Pará|Amapá|Tocantins|Maranhão|Piauí|Ceará|Rio Grande do Norte|Paraíba|Pernambuco|Alagoas|Sergipe|Bahia|Minas Gerais|Espírito Santo|Rio de Janeiro|São Paulo|Paraná|Santa Catarina|Rio Grande do Sul|Mato Grosso do Sul|Mato Grosso|Goiás|Distrito Federal".split("|"), "RO AC AM RR PA AP TO MA PI CE RN PB PE AL SE BA MG ES RJ SP PR SC RS MS MT GO DF".split()))
+    official = pd.read_excel(file, sheet_name="BRASIL E UFs", header=None, engine="calamine")
+    official = official.loc[official[0].isin(names)].copy()
+    official["Estado"] = official[0].map(names)
+    official["populacao"] = pd.to_numeric(official[2].astype(str).str.replace(r"\(\d+\)", "", regex=True).str.replace(".", "", regex=False).str.strip(), errors="raise")
+    validate_population(result)
+    validate_population(official)
+    pd.testing.assert_series_equal(result.set_index("Estado").populacao.sort_index(), official.set_index("Estado").populacao.sort_index(), check_dtype=False)
+    require(result.populacao.sum() == 213317639, "População nacional diverge da publicação de 2021")
+    return result
+
+def population_sensitivity(states, pop2021, pop2022):
+    current = per_capita(states, pop2021).rename(columns={"populacao":"populacao_2021", "emissao_per_capita":"pc_2021"})
+    previous = per_capita(states, pop2022).rename(columns={"populacao":"populacao_2022", "emissao_per_capita":"pc_base_2022"})
+    result = current[["Estado","Emissao","populacao_2021","pc_2021"]].merge(previous[["Estado","populacao_2022","pc_base_2022"]],on="Estado",validate="one_to_one")
+    result["rank_2021"] = result.pc_2021.rank(ascending=False, method="min").astype(int)
+    result["rank_base_2022"] = result.pc_base_2022.rank(ascending=False, method="min").astype(int)
+    result["mudanca_posicao"] = result.rank_base_2022 - result.rank_2021
+    result["diferenca_percentual"] = (result.pc_2021 / result.pc_base_2022 - 1) * 100
+    return result.sort_values("rank_2021")
