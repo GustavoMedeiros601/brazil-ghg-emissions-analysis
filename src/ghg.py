@@ -89,6 +89,8 @@ def prepare(root):
     outputs = {"emissoes_co2e_gwp_ar5_1970_2021.csv":long, "emissao_anual_brasil.csv":annual,
                "emissao_estado_2021.csv":states, "emissao_setor_2021.csv":sectors,
                "emissao_per_capita_2021.csv":pc, "alocacao_emissoes_2021.csv":allocation, "sensibilidade_per_capita_2021.csv":comparison}
+    outputs["emissao_uf_setor_2021.csv"] = state_sector(long)
+    outputs["decomposicao_setorial_historica.csv"] = temporal_decomposition(long)
     for name, frame in outputs.items():
         write_csv(frame, root / "data/processed" / name)
     return outputs
@@ -144,3 +146,34 @@ def population_sensitivity(states, pop2021, pop2022):
     result["mudanca_posicao"] = result.rank_base_2022 - result.rank_2021
     result["diferenca_percentual"] = (result.pc_2021 / result.pc_base_2022 - 1) * 100
     return result.sort_values("rank_2021")
+
+
+def state_sector(long, year=YEAR):
+    latest = long.loc[long.Ano.eq(year) & long.Estado.isin(UFS)].copy()
+    latest[SECTOR] = latest[SECTOR].str.strip()
+    grouped = latest.groupby(["Estado", SECTOR], as_index=False).Emissao.sum()
+    grid = pd.MultiIndex.from_product([sorted(UFS), sorted(latest[SECTOR].unique())], names=["Estado", SECTOR])
+    grouped = grouped.set_index(["Estado", SECTOR]).reindex(grid).reset_index()
+    grouped["Cobertura"] = np.where(grouped.Emissao.notna(), "Registrado", "Sem registro na fonte")
+    grouped["Total_UF"] = grouped.groupby("Estado").Emissao.transform("sum")
+    grouped["Participacao_pct"] = grouped.Emissao / grouped.Total_UF * 100
+    require((grouped.Emissao.dropna() >= 0).all(), "Participações negativas não cabem em barras 100%")
+    np.testing.assert_allclose(grouped.groupby("Estado").Participacao_pct.sum(), 100, rtol=1e-12)
+    return grouped.sort_values(["Estado", SECTOR])
+
+def temporal_decomposition(long, periods=((2002,2003),(2008,2009))):
+    data = long.copy()
+    data[SECTOR] = data[SECTOR].str.strip()
+    totals = data.groupby("Ano").Emissao.sum()
+    rows = []
+    for start, end in periods:
+        require(start >= 1990 and end == start + 1, "Use pares anuais com cobertura comparável desde 1990")
+        pivot = data.loc[data.Ano.isin([start,end])].groupby([SECTOR,"Ano"]).Emissao.sum().unstack("Ano")
+        require(set(pivot.columns) == {start,end} and pivot.notna().all().all(), "Setor/ano ausente")
+        part = pivot.rename(columns={start:"Emissao_inicial",end:"Emissao_final"}).reset_index()
+        part["Ano_inicial"], part["Ano_final"] = start, end
+        part["Diferenca"] = part.Emissao_final - part.Emissao_inicial
+        part["Contribuicao_pp"] = part.Diferenca / totals.loc[start] * 100
+        np.testing.assert_allclose(part.Diferenca.sum(), totals.loc[end] - totals.loc[start],rtol=1e-12,atol=1e-6)
+        rows.append(part)
+    return pd.concat(rows,ignore_index=True)

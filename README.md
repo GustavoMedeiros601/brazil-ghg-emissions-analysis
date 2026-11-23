@@ -224,3 +224,16 @@ O notebook 01 gera todos os arquivos consumidos pelo 02, com caminhos relativos 
 O indicador principal usa a população oficial de julho de 2021. [Método e fonte](docs/population.md). A análise de sensibilidade mantém as emissões fixas e compara os dois denominadores:
 
 ![Sensibilidade à população](images/sensibilidade_per_capita.png)
+
+
+## Decomposição das mudanças e perfis estaduais
+
+A análise de 2002→2003 e 2008→2009 identifica contribuições setoriais que reconciliam os totais nacionais. Trata-se de uma decomposição contábil, não causal.
+
+![Contribuições de 2002 a 2003](images/decomposicao_2002_2003.png)
+
+![Contribuições de 2008 a 2009](images/decomposicao_2008_2009.png)
+
+A composição percentual permite comparar os perfis dos dez maiores emissores, sem perder seus totais absolutos. A tabela exportada contém todas as 27 UFs.
+
+![Composição estadual](images/composicao_uf_setor_2021.png)
